@@ -3,13 +3,15 @@ package br.com.fullstackedu.labpcp.service;
 import br.com.fullstackedu.labpcp.database.entity.PapelEntity;
 import br.com.fullstackedu.labpcp.database.repository.PapelRepository;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PapelInitizalizationService {
-    @Autowired
-    private PapelRepository papelRepository;
+    private final PapelRepository papelRepository;
+
+    public PapelInitizalizationService(PapelRepository papelRepository) {
+        this.papelRepository = papelRepository;
+    }
 
     private void insertIfNotExists(Long id, String nome) {
         if (papelRepository.findByNome(nome).isEmpty()) {
