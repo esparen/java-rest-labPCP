@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.database.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -21,6 +22,7 @@ public class UsuarioEntity {
 
     @ManyToOne
     @JoinColumn(name = "id_papel")
+    @NotNull(message = "É necessário um Papel válido para o Usuário")
     private PapelEntity papel;
 
 }
