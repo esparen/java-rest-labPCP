@@ -4,6 +4,7 @@ import br.com.fullstackedu.labpcp.controller.dto.response.NovoUsuarioResponse;
 import br.com.fullstackedu.labpcp.database.entity.UsuarioEntity;
 import br.com.fullstackedu.labpcp.database.repository.UsuarioRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,13 +13,16 @@ import java.time.LocalDateTime;
 @Service
 public class UsuarioService {
     private UsuarioRepository usuarioRepository;
+    private final BCryptPasswordEncoder bCryptEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, BCryptPasswordEncoder bCryptEncoder) {
         this.usuarioRepository = usuarioRepository;
+        this.bCryptEncoder = bCryptEncoder;
     }
 
     public NovoUsuarioResponse novoUsuario(UsuarioEntity usuario) throws Exception{
         try {
+            usuario.setSenha(bCryptEncoder.encode(usuario.getSenha()));
             UsuarioEntity novoUsuarioEntity = usuarioRepository.save(usuario);
             log.info("Usuario adicionado com sucesso: {}", usuario);
             return new NovoUsuarioResponse(true, LocalDateTime.now(),"Usuário cadastrado com sucesso.", novoUsuarioEntity);
