@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,6 +23,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -40,11 +42,11 @@ public class SecurityConfig {
     // criação de uma classe
     // classe que representa os filtros do Spring Security
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/login").permitAll() // permite os endpoints que tenham o texto que condiz com /login
                         .requestMatchers(HttpMethod.POST, "/cadastro").permitAll()
+                        .requestMatchers("/error").permitAll() //allows public access to the error page
                         .anyRequest().authenticated() // pede autenticação para todos os endpoints que não foram permitidos
                 )
                 .csrf(AbstractHttpConfigurer::disable) // desabilita o CSRF, ele bloqueia alguns tipos de chamadas por padrão
@@ -52,7 +54,9 @@ public class SecurityConfig {
                         oath2.jwt(Customizer.withDefaults()) // configurar o JWT com os padrões de projeto -> os beans JwtDecoder e JwtEncoder
                 ) // configurar esse programa como um Servidor de Recursos OAuth2
                 // filtro adicionado a cadeia de filtros do Spring Security
-
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)) // Customize the entry point to return 401 Unauthorized
+                )
                 .sessionManagement(session ->  // sessão é uma forma de manter um usuário logado
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                         // indica que o sistema nunca fica logado, ele depende do token para validar um acesso
