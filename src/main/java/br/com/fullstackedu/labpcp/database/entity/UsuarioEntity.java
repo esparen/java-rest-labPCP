@@ -1,8 +1,10 @@
 package br.com.fullstackedu.labpcp.database.entity;
 
+import br.com.fullstackedu.labpcp.controller.dto.request.LoginRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Data
 @Entity
@@ -24,5 +26,12 @@ public class UsuarioEntity {
     @JoinColumn(name = "id_papel")
     @NotNull(message = "É necessário um Papel válido para o Usuário")
     private PapelEntity papel;
+
+    public boolean isValidPassword(LoginRequest loginRequest, BCryptPasswordEncoder bCryptEncoder) {
+        return bCryptEncoder.matches(
+                loginRequest.senha(),
+                this.senha
+        );
+    }
 
 }
