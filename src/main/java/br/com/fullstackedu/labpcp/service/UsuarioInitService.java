@@ -5,6 +5,7 @@ import br.com.fullstackedu.labpcp.database.repository.PapelRepository;
 import br.com.fullstackedu.labpcp.database.repository.UsuarioRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,10 +14,12 @@ public class UsuarioInitService {
 
     private final UsuarioRepository usuarioRepository;
     private final PapelRepository papelRepository;
+    private final BCryptPasswordEncoder bCryptEncoder;
 
-    public UsuarioInitService(UsuarioRepository usuarioRepository, PapelRepository papelRepository) {
+    public UsuarioInitService(UsuarioRepository usuarioRepository, PapelRepository papelRepository, BCryptPasswordEncoder bCryptEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.papelRepository = papelRepository;
+        this.bCryptEncoder = bCryptEncoder;
     }
 
     private void insertIfNotExists(Long id, String login, String senha) throws Exception{
@@ -25,7 +28,7 @@ public class UsuarioInitService {
             UsuarioEntity newUser = new UsuarioEntity();
             newUser.setId(id);
             newUser.setLogin(login);
-            newUser.setSenha(senha);
+            newUser.setSenha(bCryptEncoder.encode(senha));
             newUser.setNome(login);
             newUser.setPapel(papelRepository.findByNome(login)
                     .orElseThrow(

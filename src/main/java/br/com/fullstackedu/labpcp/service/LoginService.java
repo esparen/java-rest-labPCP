@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,16 @@ public class LoginService {
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder bCryptEncoder;
     private final JwtEncoder jwtEncoder;
+    private final JwtDecoder jwtDecoder;
+
+    public String getFieldInToken(String token, String field) {
+        String result = jwtDecoder
+                .decode(token)
+                .getClaims()
+                .get(field)
+                .toString();
+        return result;
+    }
 
     public LoginResponse doLogin(LoginRequest loginRequest) throws Exception{
         try {

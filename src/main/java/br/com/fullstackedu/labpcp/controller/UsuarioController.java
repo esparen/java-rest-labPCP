@@ -27,8 +27,12 @@ public class UsuarioController {
     }
 
     @PostMapping()
-    public ResponseEntity<NovoUsuarioResponse> newUsuario(@Valid @RequestBody NovoUsuarioRequest nuRequest) throws Exception {
+    public ResponseEntity<NovoUsuarioResponse> newUsuario(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @RequestBody NovoUsuarioRequest nuRequest
+    ) throws Exception {
         log.info("POST /cadastro -> Novo Usuario ");
+
         UsuarioEntity newUser = new UsuarioEntity();
         newUser.setNome(nuRequest.nome());
         newUser.setLogin(nuRequest.login());
@@ -37,13 +41,12 @@ public class UsuarioController {
                 papelService.getPapelById(nuRequest.idPapel())
         );
 
-        NovoUsuarioResponse response = usuarioService.novoUsuario(newUser);
+        NovoUsuarioResponse response = usuarioService.novoUsuario(newUser, authToken);
         if (response.success()){
             log.info("POST /cadastro -> Usuário cadastrado com sucesso.");
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } else {
             log.info("POST /cadastro -> Erro ao cadastrar novo usuário: [{}].", response.message());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+        return ResponseEntity.status(response.httpStatus()).body(response);
     }
 }
