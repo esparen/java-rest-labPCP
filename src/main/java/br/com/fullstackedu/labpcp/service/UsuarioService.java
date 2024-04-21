@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 public class UsuarioService {
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder bCryptEncoder;
 
     public UsuarioService(UsuarioRepository usuarioRepository, BCryptPasswordEncoder bCryptEncoder) {
