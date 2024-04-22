@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.service;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.TurmaCreateRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.TurmaUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.TurmaCreateResponse;
 import br.com.fullstackedu.labpcp.database.entity.CursoEntity;
 import br.com.fullstackedu.labpcp.database.entity.DocenteEntity;
@@ -96,5 +97,50 @@ public class TurmaService {
             log.error("Falha ao buscar Turma ID {}. Erro: {}", turmaId, e.getMessage());
             return new TurmaCreateResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
         }
+    }
+
+    public TurmaCreateResponse updateTurma(Long turmaId, TurmaUpdateRequest turmaUpdateRequest, String actualToken) {
+        try {
+            String papelName =  loginService.getFieldInToken(actualToken, "scope");
+            List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO");
+            if (!authorizedPapeis.contains(papelName)){
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new TurmaCreateResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            return _updateTurma(turmaUpdateRequest,turmaId);
+
+        } catch (Exception e) {
+            log.error("Falha ao atualizar a Turma {}. Erro: {}", turmaId, e.getMessage());
+            return new TurmaCreateResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private TurmaCreateResponse _updateTurma(TurmaUpdateRequest turmaUpdateRequest, Long turmaId) {
+        TurmaEntity targetTurmaEntity = turmaRepository.findById(turmaId).orElse(null);
+        if (Objects.isNull(targetTurmaEntity))
+            return new TurmaCreateResponse(false, LocalDateTime.now() , "Turma id [" + turmaId + "] não encontrada" , null, HttpStatus.NOT_FOUND);
+
+        if (turmaUpdateRequest.id_curso() != null) {
+            CursoEntity targetCurso = cursoRepository.findById(turmaUpdateRequest.id_curso()).orElse(null);
+            if (targetCurso != null) targetTurmaEntity.setCurso(targetCurso);
+            else return new TurmaCreateResponse(false, LocalDateTime.now() , "Falha ao associar Curso ID "+ turmaUpdateRequest.id_curso() +" à Turma ID ["+ turmaId +"]: O Curso não existe." , null, HttpStatus.NOT_FOUND);
+        }
+
+        if (!Objects.isNull(turmaUpdateRequest.id_professor())) {
+            DocenteEntity targetProfessor = docenteRepository.findById(turmaUpdateRequest.id_professor()).orElse(null);
+            if (Objects.isNull(targetProfessor)){
+                String errMessage = "Erro ao associar professor à turma: Nenhum Docente com id ["+ turmaUpdateRequest.id_professor() +"] encontrado";
+                log.error(errMessage);
+                return new TurmaCreateResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.NOT_FOUND);
+            } else {
+                targetTurmaEntity.setProfessor(targetProfessor);
+            }
+        }
+        if (turmaUpdateRequest.nome() != null) targetTurmaEntity.setNome(turmaUpdateRequest.nome());
+
+        TurmaEntity savedTurmaEntity = turmaRepository.save(targetTurmaEntity);
+        return new TurmaCreateResponse(true, LocalDateTime.now(), "Turma atualizada", Collections.singletonList(savedTurmaEntity) , HttpStatus.OK);
+
     }
 }
