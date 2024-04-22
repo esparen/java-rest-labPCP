@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 
-public record NovoDocenteRequest(
+public record DocenteCreateRequest(
         @NotBlank(message = "O nome do Docente é obrigatório")
         String nome,
 
