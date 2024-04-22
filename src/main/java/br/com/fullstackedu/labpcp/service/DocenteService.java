@@ -133,4 +133,31 @@ public class DocenteService {
         return new NovoDocenteResponse(true, LocalDateTime.now(), "Docente atualizado", Collections.singletonList(savedDocenteEntity) , HttpStatus.OK);
 
     }
+
+    public NovoDocenteResponse deleteDocente(Long docenteId, String authToken) {
+        try {
+            String papelName = loginService.getFieldInToken(authToken, "scope");
+            List<String> authorizedPapeis = List.of("ADM");
+            if (!authorizedPapeis.contains(papelName)) {
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new NovoDocenteResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            return _deleteDocente(docenteId);
+
+        } catch (Exception e) {
+            log.error("Falha ao excluir o docente {}. Erro: {}", docenteId, e.getMessage());
+            return new NovoDocenteResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private NovoDocenteResponse _deleteDocente(Long docenteId) {
+        DocenteEntity targetDocenteEntity = docenteRepository.findById(docenteId).orElse(null);
+        if (Objects.isNull(targetDocenteEntity))
+            return new NovoDocenteResponse(false, LocalDateTime.now() , "Docente id [" + docenteId + "] não encontrado" , null, HttpStatus.NOT_FOUND);
+        else {
+            docenteRepository.delete(targetDocenteEntity);
+            return new NovoDocenteResponse(true, LocalDateTime.now() , "Docente id [" + docenteId + "] excluido" , null, HttpStatus.NO_CONTENT);
+        }
+    }
 }
