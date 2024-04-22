@@ -10,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/docente")
+@RequestMapping("/docentes")
 @Slf4j
 @Validated
 public class DocenteController {
@@ -25,18 +25,18 @@ public class DocenteController {
             @RequestHeader(name = "Authorization") String authToken,
             @Valid @RequestBody NovoDocenteRequest novoDocenteRequest
     ) throws Exception {
-        log.info("POST /docente -> Novo Docente ");
+        log.info("POST /docentes -> Novo Docente ");
         String actualToken = authToken.substring(7);
         NovoDocenteResponse response = docenteService.novoDocente(novoDocenteRequest, actualToken);
         if (response.success()){
-            log.info("POST /docente -> Docente cadastrado com sucesso.");
+            log.info("POST /docentes -> Docente cadastrado com sucesso.");
         } else {
-            log.error("POST /docente -> Erro ao cadastrar novo Docente: [{}].", response.message());
+            log.error("POST /docentes -> Erro ao cadastrar novo Docente: [{}].", response.message());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
-    @GetMapping("{docenteId}")
+    @GetMapping("/{docenteId}")
     public ResponseEntity<NovoDocenteResponse> getDocenteById(
             @RequestHeader(name = "Authorization") String authToken,
             @Valid @PathVariable Long docenteId) {
@@ -44,11 +44,24 @@ public class DocenteController {
         String actualToken = authToken.substring(7);
         NovoDocenteResponse response = docenteService.getDocenteById(docenteId, actualToken);
         if (response.success()){
-            log.info("GET /docente/{} -> OK ", docenteId);
+            log.info("GET /docentes/{} -> OK ", docenteId);
         } else {
-            log.error("GET /docente/{} -> 404", docenteId);
+            log.error("GET /docentes/{} -> 404", docenteId);
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
+    }
 
+    @GetMapping()
+    public ResponseEntity<NovoDocenteResponse> getAllDocentes(
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("GET /docentes ");
+        String actualToken = authToken.substring(7);
+        NovoDocenteResponse response = docenteService.getAllDocentes(actualToken);
+        if (response.success()) {
+            log.info("GET /docentes -> OK ");
+        } else {
+            log.error("GET /docentes -> 404");
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
     }
 }

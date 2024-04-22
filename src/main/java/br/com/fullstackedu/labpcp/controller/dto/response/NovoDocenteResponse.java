@@ -4,7 +4,8 @@ import br.com.fullstackedu.labpcp.database.entity.DocenteEntity;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-public record NovoDocenteResponse(Boolean success, LocalDateTime timestamp, String message, DocenteEntity docenteEntity, HttpStatus httpStatus) {
+public record NovoDocenteResponse(Boolean success, LocalDateTime timestamp, String message, List<DocenteEntity> docenteData, HttpStatus httpStatus) {
+
 }
-
