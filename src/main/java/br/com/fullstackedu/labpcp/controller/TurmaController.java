@@ -5,6 +5,7 @@ import br.com.fullstackedu.labpcp.controller.dto.request.TurmaUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.TurmaCreateResponse;
 import br.com.fullstackedu.labpcp.service.TurmaService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -64,6 +65,21 @@ public class TurmaController {
             log.info("PUT /turmas -> OK ");
         } else {
             log.error("PUT /turmas -> 400");
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @DeleteMapping("/{turmaId}")
+    public ResponseEntity<TurmaCreateResponse> deleteTurma(
+            @PathVariable @NotNull(message = "ID da turma é requerido para exclusão") Long turmaId,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("DELETE /turmas");
+        String actualToken = authToken.substring(7);
+        TurmaCreateResponse response = turmaService.deleteTurma(turmaId, actualToken);
+        if (response.success()) {
+            log.info("DELETE /turmas -> OK ");
+        } else {
+            log.error("DELETE /turmas -> 400");
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }

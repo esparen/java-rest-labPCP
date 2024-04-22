@@ -143,4 +143,32 @@ public class TurmaService {
         return new TurmaCreateResponse(true, LocalDateTime.now(), "Turma atualizada", Collections.singletonList(savedTurmaEntity) , HttpStatus.OK);
 
     }
+
+    public TurmaCreateResponse deleteTurma(Long turmaId, String actualToken) {
+        try {
+            String papelName = loginService.getFieldInToken(actualToken, "scope");
+            List<String> authorizedPapeis = List.of("ADM");
+            if (!authorizedPapeis.contains(papelName)) {
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new TurmaCreateResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            return _deleteTurma(turmaId);
+
+        } catch (Exception e) {
+            log.error("Falha ao excluir a turma {}. Erro: {}", turmaId, e.getMessage());
+            return new TurmaCreateResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+
+    }
+
+    private TurmaCreateResponse _deleteTurma(Long turmaId) {
+        TurmaEntity targetTurmaEntity = turmaRepository.findById(turmaId).orElse(null);
+        if (Objects.isNull(targetTurmaEntity))
+            return new TurmaCreateResponse(false, LocalDateTime.now() , "Turma id [" + turmaId + "] não encontrada" , null, HttpStatus.NOT_FOUND);
+        else {
+            turmaRepository.delete(targetTurmaEntity);
+            return new TurmaCreateResponse(true, LocalDateTime.now() , "Docente id [" + turmaId + "] excluido" , null, HttpStatus.NO_CONTENT);
+        }
+    }
 }
