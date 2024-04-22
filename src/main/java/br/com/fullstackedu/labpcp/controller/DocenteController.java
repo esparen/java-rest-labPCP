@@ -1,9 +1,12 @@
 package br.com.fullstackedu.labpcp.controller;
 
-import br.com.fullstackedu.labpcp.controller.dto.request.NovoDocenteRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.DocenteCreateRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.DocenteUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.NovoDocenteResponse;
 import br.com.fullstackedu.labpcp.service.DocenteService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -23,11 +26,11 @@ public class DocenteController {
     @PostMapping()
     public ResponseEntity<NovoDocenteResponse> newDocente(
             @RequestHeader(name = "Authorization") String authToken,
-            @Valid @RequestBody NovoDocenteRequest novoDocenteRequest
+            @Valid @RequestBody DocenteCreateRequest docenteCreateRequest
     ) throws Exception {
         log.info("POST /docentes -> Novo Docente ");
         String actualToken = authToken.substring(7);
-        NovoDocenteResponse response = docenteService.novoDocente(novoDocenteRequest, actualToken);
+        NovoDocenteResponse response = docenteService.novoDocente(docenteCreateRequest, actualToken);
         if (response.success()){
             log.info("POST /docentes -> Docente cadastrado com sucesso.");
         } else {
@@ -61,6 +64,22 @@ public class DocenteController {
             log.info("GET /docentes -> OK ");
         } else {
             log.error("GET /docentes -> 404");
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @PutMapping("/{docenteId}")
+    public ResponseEntity<NovoDocenteResponse> updateDocente(
+            @PathVariable Long docenteId,
+            @Valid @RequestBody DocenteUpdateRequest docenteUpdateRequest,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("PUT /docentes {}", docenteUpdateRequest);
+        String actualToken = authToken.substring(7);
+        NovoDocenteResponse response = docenteService.updateDocente(docenteId , docenteUpdateRequest, actualToken);
+        if (response.success()) {
+            log.info("PUT /docentes -> OK ");
+        } else {
+            log.error("GET /docentes -> 400");
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }

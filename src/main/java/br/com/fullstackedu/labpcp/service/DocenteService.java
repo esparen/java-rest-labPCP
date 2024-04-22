@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.service;
 
-import br.com.fullstackedu.labpcp.controller.dto.request.NovoDocenteRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.DocenteCreateRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.DocenteUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.NovoDocenteResponse;
 import br.com.fullstackedu.labpcp.database.entity.DocenteEntity;
 import br.com.fullstackedu.labpcp.database.entity.UsuarioEntity;
@@ -26,7 +27,7 @@ public class DocenteService {
         this.loginService = loginService;
     }
 
-    public NovoDocenteResponse novoDocente(NovoDocenteRequest novoDocenteRequest, String authToken) throws Exception{
+    public NovoDocenteResponse novoDocente(DocenteCreateRequest docenteCreateRequest, String authToken) throws Exception{
         try {
             String papelName =  loginService.getFieldInToken(authToken, "scope");
             List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO", "RECRUITER");
@@ -35,16 +36,16 @@ public class DocenteService {
                 log.error(errMessage);
                 return new NovoDocenteResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
             }
-            UsuarioEntity targetUsuario = usuarioRepository.findById(novoDocenteRequest.id_usuario()).orElse(null);   //getReferenceById();
+            UsuarioEntity targetUsuario = usuarioRepository.findById(docenteCreateRequest.id_usuario()).orElse(null);   //getReferenceById();
             if (Objects.isNull(targetUsuario)){
-                String errMessage = "Erro ao cadastrar docente: Nenhum usuário com id ["+ novoDocenteRequest.id_usuario() +"] encontrado";
+                String errMessage = "Erro ao cadastrar docente: Nenhum usuário com id ["+ docenteCreateRequest.id_usuario() +"] encontrado";
                 log.error(errMessage);
                 return new NovoDocenteResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.NOT_FOUND);
             }
             DocenteEntity newDocenteEntity = docenteRepository.save(
                     new DocenteEntity(
-                            novoDocenteRequest.nome(),
-                            novoDocenteRequest.data_entrada(),
+                            docenteCreateRequest.nome(),
+                            docenteCreateRequest.data_entrada(),
                             targetUsuario)
                     );
             log.info("Docente adicionado com sucesso: {}", newDocenteEntity);
@@ -94,6 +95,43 @@ public class DocenteService {
                 log.error("Falha ao buscar Docentes cadastrados. Erro: {}", e.getMessage());
                 return new NovoDocenteResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
             }
+
+    }
+
+    public NovoDocenteResponse updateDocente(Long docenteId, DocenteUpdateRequest docenteUpdateRequest, String authToken) {
+        try {
+            String papelName = loginService.getFieldInToken(authToken, "scope");
+            List<String> authorizedPapeis = Arrays.asList("ADM", "PEDAGOGICO", "RECRUITER");
+            if (!authorizedPapeis.contains(papelName)) {
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new NovoDocenteResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            return _updateDocente(docenteUpdateRequest,docenteId);
+
+        } catch (Exception e) {
+            log.error("Falha ao atualizar o docente {}. Erro: {}", docenteId, e.getMessage());
+            return new NovoDocenteResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private NovoDocenteResponse _updateDocente(DocenteUpdateRequest docenteUpdateRequest, Long docenteId) {
+        DocenteEntity targetDocenteEntity = docenteRepository.findById(docenteId).orElse(null);
+        if (Objects.isNull(targetDocenteEntity))
+            return new NovoDocenteResponse(false, LocalDateTime.now() , "Docente id [" + docenteId + "] não encontrado" , null, HttpStatus.NOT_FOUND);
+
+        if (docenteUpdateRequest.id_usuario() != null) {
+            UsuarioEntity usuario = usuarioRepository.findById(docenteUpdateRequest.id_usuario()).orElse(null);
+            if (usuario != null) targetDocenteEntity.setUsuario(usuario);
+            else return new NovoDocenteResponse(false, LocalDateTime.now() , "Falha ao associar Usuário ID "+ docenteUpdateRequest.id_usuario() +" ao Docente ID ["+ docenteId+"]: Usuário não existe" , null, HttpStatus.NOT_FOUND);
+        }
+
+        if (docenteUpdateRequest.nome() != null) targetDocenteEntity.setNome(docenteUpdateRequest.nome());
+
+        if (docenteUpdateRequest.data_entrada() != null) targetDocenteEntity.setDataEntrada(docenteUpdateRequest.data_entrada());
+
+        DocenteEntity savedDocenteEntity = docenteRepository.save(targetDocenteEntity);
+        return new NovoDocenteResponse(true, LocalDateTime.now(), "Docente atualizado", Collections.singletonList(savedDocenteEntity) , HttpStatus.OK);
 
     }
 }
