@@ -58,4 +58,25 @@ public class DocenteService {
     }
 
 
+    public NovoDocenteResponse getDocenteById(Long docenteId, String authToken) {
+        try {
+            String papelName =  loginService.getFieldInToken(authToken, "scope");
+            List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO", "RECRUITER");
+            if (!authorizedPapeis.contains(papelName)){
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new NovoDocenteResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            DocenteEntity targetDocente = docenteRepository.findById(docenteId).orElse(null);
+            if (Objects.isNull(targetDocente)){
+                return new NovoDocenteResponse(false, LocalDateTime.now() , "Docente ID "+docenteId+" não encontrado." , null, HttpStatus.NOT_FOUND);
+            } else
+                return new NovoDocenteResponse(true, LocalDateTime.now() , "Docente encontrado" , targetDocente, HttpStatus.OK);
+        } catch(Exception e) {
+            log.error("Falha ao buscar Docente ID {}. Erro: {}", docenteId, e.getMessage());
+            return new NovoDocenteResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+
+
+    }
 }
