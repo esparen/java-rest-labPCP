@@ -48,7 +48,21 @@ public class TurmaController {
         if (response.success()){
             log.info("GET /turmas/{} -> OK ", turmaId);
         } else {
-            log.error("GET /turmas/{} -> 404", turmaId);
+            log.error("GET /turmas/{} -> 500", turmaId);
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @GetMapping()
+    public ResponseEntity<TurmaCreateResponse> getAllTurmas(
+            @RequestHeader(name = "Authorization") String authToken) throws Exception {
+        log.info("GET /turmas ");
+        String actualToken = authToken.substring(7);
+        TurmaCreateResponse response = turmaService.getAllTurmas(actualToken);
+        if (response.success()){
+            log.info("GET /turmas -> OK ");
+        } else {
+            log.error("GET /turmas -> 500");
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
@@ -64,7 +78,7 @@ public class TurmaController {
         if (response.success()) {
             log.info("PUT /turmas -> OK ");
         } else {
-            log.error("PUT /turmas -> 400");
+            log.error("PUT /turmas -> 500");
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
@@ -79,7 +93,7 @@ public class TurmaController {
         if (response.success()) {
             log.info("DELETE /turmas -> OK ");
         } else {
-            log.error("DELETE /turmas -> 400");
+            log.error("DELETE /turmas -> 500");
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
