@@ -35,4 +35,19 @@ public class TurmaController {
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
+
+    @GetMapping("/{turmaId}")
+    public ResponseEntity<TurmaCreateResponse> getTurmaById(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @PathVariable Long turmaId) {
+        log.info("GET /turmas/{} ", turmaId);
+        String actualToken = authToken.substring(7);
+        TurmaCreateResponse response = turmaService.getTurmaById(turmaId, actualToken);
+        if (response.success()){
+            log.info("GET /turmas/{} -> OK ", turmaId);
+        } else {
+            log.error("GET /turmas/{} -> 404", turmaId);
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
 }
