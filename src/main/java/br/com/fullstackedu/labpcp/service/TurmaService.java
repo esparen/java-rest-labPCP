@@ -77,4 +77,24 @@ public class TurmaService {
         log.info("Turma adicionada com sucesso: {}", newTurma.getId());
         return new TurmaCreateResponse(true, LocalDateTime.now(),"Turma adicionada com sucesso.", Collections.singletonList(newTurma), HttpStatus.CREATED);
     }
+
+    public TurmaCreateResponse getTurmaById(Long turmaId, String actualToken) {
+        try {
+            String papelName =  loginService.getFieldInToken(actualToken, "scope");
+            List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO");
+            if (!authorizedPapeis.contains(papelName)){
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new TurmaCreateResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            TurmaEntity targetTurma = turmaRepository.findById(turmaId).orElse(null);
+            if (Objects.isNull(targetTurma)){
+                return new TurmaCreateResponse(false, LocalDateTime.now() , "Turma ID "+turmaId+" não encontrado." , null, HttpStatus.NOT_FOUND);
+            } else
+                return new TurmaCreateResponse(true, LocalDateTime.now() , "Turma encontrada" , Collections.singletonList(targetTurma), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Turma ID {}. Erro: {}", turmaId, e.getMessage());
+            return new TurmaCreateResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+    }
 }
