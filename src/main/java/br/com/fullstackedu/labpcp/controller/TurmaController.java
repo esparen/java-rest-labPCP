@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.controller;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.TurmaCreateRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.TurmaUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.TurmaCreateResponse;
 import br.com.fullstackedu.labpcp.service.TurmaService;
 import jakarta.validation.Valid;
@@ -47,6 +48,22 @@ public class TurmaController {
             log.info("GET /turmas/{} -> OK ", turmaId);
         } else {
             log.error("GET /turmas/{} -> 404", turmaId);
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @PutMapping("/{turmaId}")
+    public ResponseEntity<TurmaCreateResponse> updateTurma(
+            @PathVariable Long turmaId,
+            @Valid @RequestBody TurmaUpdateRequest turmaUpdateRequest,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("PUT /turmas");
+        String actualToken = authToken.substring(7);
+        TurmaCreateResponse response = turmaService.updateTurma(turmaId , turmaUpdateRequest, actualToken);
+        if (response.success()) {
+            log.info("PUT /turmas -> OK ");
+        } else {
+            log.error("PUT /turmas -> 400");
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
