@@ -171,4 +171,25 @@ public class TurmaService {
             return new TurmaCreateResponse(true, LocalDateTime.now() , "Docente id [" + turmaId + "] excluido" , null, HttpStatus.NO_CONTENT);
         }
     }
+
+    public TurmaCreateResponse getAllTurmas(String actualToken) {
+        try {
+            String papelName = loginService.getFieldInToken(actualToken, "scope");
+            List<String> authorizedPapeis = Arrays.asList("ADM", "PEDAGOGICO");
+            if (!authorizedPapeis.contains(papelName)) {
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new TurmaCreateResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            List<TurmaEntity> listTurmas = turmaRepository.findAll();
+            if (listTurmas.isEmpty()){
+                return new TurmaCreateResponse(false, LocalDateTime.now() , "Não há turmas cadastradas." , null, HttpStatus.NOT_FOUND);
+            } else
+                return new TurmaCreateResponse(true, LocalDateTime.now(), "Turmas encontradas: " + listTurmas.size() , listTurmas, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Turmas cadastradas. Erro: {}", e.getMessage());
+            return new TurmaCreateResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+
+    }
 }
