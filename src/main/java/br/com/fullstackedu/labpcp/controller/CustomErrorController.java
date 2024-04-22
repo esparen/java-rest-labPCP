@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -46,4 +47,16 @@ public class CustomErrorController {
         response.setTimestamp(LocalDateTime.now());
         return ResponseEntity.badRequest().body(response);
     }
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseBody
+    public ResponseEntity<CustomErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        CustomErrorResponse response = new CustomErrorResponse();
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setMessage(ex.getMessage());
+        response.setTrace(Arrays.toString(ex.getStackTrace()));
+        response.setTimestamp(LocalDateTime.now());
+        return ResponseEntity.badRequest().body(response);
+    }
+
+
 }

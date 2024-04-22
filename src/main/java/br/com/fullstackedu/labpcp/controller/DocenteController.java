@@ -25,14 +25,30 @@ public class DocenteController {
             @RequestHeader(name = "Authorization") String authToken,
             @Valid @RequestBody NovoDocenteRequest novoDocenteRequest
     ) throws Exception {
-        String actualToken = authToken.substring(7);
         log.info("POST /docente -> Novo Docente ");
+        String actualToken = authToken.substring(7);
         NovoDocenteResponse response = docenteService.novoDocente(novoDocenteRequest, actualToken);
         if (response.success()){
             log.info("POST /docente -> Docente cadastrado com sucesso.");
         } else {
-            log.info("POST /docente -> Erro ao cadastrar novo Docente: [{}].", response.message());
+            log.error("POST /docente -> Erro ao cadastrar novo Docente: [{}].", response.message());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @GetMapping("{docenteId}")
+    public ResponseEntity<NovoDocenteResponse> getDocenteById(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @PathVariable Long docenteId) {
+        log.info("GET /docente/{} ", docenteId);
+        String actualToken = authToken.substring(7);
+        NovoDocenteResponse response = docenteService.getDocenteById(docenteId, actualToken);
+        if (response.success()){
+            log.info("GET /docente/{} -> OK ", docenteId);
+        } else {
+            log.error("GET /docente/{} -> 404", docenteId);
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+
     }
 }
