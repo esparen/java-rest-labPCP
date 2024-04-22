@@ -77,25 +77,24 @@ public class DocenteService {
         }
     }
 
-        public NovoDocenteResponse getAllDocentes(String authToken) {
-            try {
-                String papelName =  loginService.getFieldInToken(authToken, "scope");
-                List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO", "RECRUITER");
-                if (!authorizedPapeis.contains(papelName)){
-                    String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
-                    log.error(errMessage);
-                    return new NovoDocenteResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
-                }
-                List<DocenteEntity> listDocentes = docenteRepository.findAll();
-                if (listDocentes.isEmpty()){
-                    return new NovoDocenteResponse(false, LocalDateTime.now() , "Não há docentes cadastrados." , null, HttpStatus.NOT_FOUND);
-                } else
-                    return new NovoDocenteResponse(true, LocalDateTime.now(), "Docentes encontrados: " + listDocentes.size() , listDocentes, HttpStatus.OK);
-            } catch(Exception e) {
-                log.error("Falha ao buscar Docentes cadastrados. Erro: {}", e.getMessage());
-                return new NovoDocenteResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+    public NovoDocenteResponse getAllDocentes(String authToken) {
+        try {
+            String papelName =  loginService.getFieldInToken(authToken, "scope");
+            List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO", "RECRUITER");
+            if (!authorizedPapeis.contains(papelName)){
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new NovoDocenteResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
             }
-
+            List<DocenteEntity> listDocentes = docenteRepository.findAll();
+            if (listDocentes.isEmpty()){
+                return new NovoDocenteResponse(false, LocalDateTime.now() , "Não há docentes cadastrados." , null, HttpStatus.NOT_FOUND);
+            } else
+                return new NovoDocenteResponse(true, LocalDateTime.now(), "Docentes encontrados: " + listDocentes.size() , listDocentes, HttpStatus.OK);
+        } catch(Exception e) {
+            log.error("Falha ao buscar Docentes cadastrados. Erro: {}", e.getMessage());
+            return new NovoDocenteResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
     }
 
     public NovoDocenteResponse updateDocente(Long docenteId, DocenteUpdateRequest docenteUpdateRequest, String authToken) {

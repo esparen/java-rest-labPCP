@@ -5,8 +5,6 @@ import br.com.fullstackedu.labpcp.controller.dto.request.DocenteUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.NovoDocenteResponse;
 import br.com.fullstackedu.labpcp.service.DocenteService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
