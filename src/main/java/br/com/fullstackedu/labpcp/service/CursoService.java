@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -22,10 +21,15 @@ public class CursoService {
     private final CursoRepository cursoRepository;
     private final LoginService loginService;
 
-    private boolean _isAuthorized(String actualToken) {
+    private static final List<String> commonPermissions = List.of("ADM", "PEDAGOGICO");
+    private static final List<String> deletePermission = List.of("ADM");
+
+    private boolean _isAuthorized(String actualToken, List<String> authorizedPerfis) {
         String papelName =  loginService.getFieldInToken(actualToken, "scope");
-        List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO");
-        return authorizedPapeis.contains(papelName);
+        return authorizedPerfis.contains(papelName);
+    }
+    private boolean _isAuthorized(String actualToken) {
+        return _isAuthorized(actualToken, commonPermissions);
     }
 
     public CursoResponse insertCurso(CursoRequest cursoRequest, String actualToken) {
@@ -111,4 +115,31 @@ public class CursoService {
         return new CursoResponse(true, LocalDateTime.now(), "Curso atualizado", Collections.singletonList(savedCursoEntity) , HttpStatus.OK);
 
     }
+
+    public CursoResponse deleteCurso(Long cursoId, String actualToken) {
+        try {
+            if(!_isAuthorized(actualToken, deletePermission)) {
+                String errMessage = "Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new CursoResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            return _deleteCurso(cursoId);
+
+        } catch (Exception e) {
+            log.error("Falha ao excluir a curso {}. Erro: {}", cursoId, e.getMessage());
+            return new CursoResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+
+    }
+
+    private CursoResponse _deleteCurso(Long cursoId) {
+        CursoEntity targetCursoEntity = cursoRepository.findById(cursoId).orElse(null);
+        if (Objects.isNull(targetCursoEntity))
+            return new CursoResponse(false, LocalDateTime.now() , "Curso id [" + cursoId + "] não encontrada" , null, HttpStatus.NOT_FOUND);
+        else {
+            cursoRepository.delete(targetCursoEntity);
+            return new CursoResponse(true, LocalDateTime.now() , "Curso id [" + cursoId + "] excluido" , null, HttpStatus.NO_CONTENT);
+        }
+    }
+
 }
