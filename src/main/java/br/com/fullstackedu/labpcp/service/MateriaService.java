@@ -106,4 +106,30 @@ public class MateriaService {
             return new MateriaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
         }
     }
+
+    public MateriaResponse deleteMateria(Long materiaId, String actualToken) {
+        try {
+            if(!_isAuthorized(actualToken, deletePermission)) {
+                String errMessage = "Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new MateriaResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            return _deleteMateria(materiaId);
+
+        } catch (Exception e) {
+            log.error("Falha ao excluir a materia {}. Erro: {}", materiaId, e.getMessage());
+            return new MateriaResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+
+    }
+
+    private MateriaResponse _deleteMateria(Long materiaId) {
+        MateriaEntity targetMateriaEntity = materiaRepository.findById(materiaId).orElse(null);
+        if (Objects.isNull(targetMateriaEntity))
+            return new MateriaResponse(false, LocalDateTime.now() , "Materia id [" + materiaId + "] não encontrada" , null, HttpStatus.NOT_FOUND);
+        else {
+            materiaRepository.delete(targetMateriaEntity);
+            return new MateriaResponse(true, LocalDateTime.now() , "Materia id [" + materiaId + "] excluido" , null, HttpStatus.NO_CONTENT);
+        }
+    }
 }
