@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.controller;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.MateriaRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.MateriaUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.MateriaResponse;
 import br.com.fullstackedu.labpcp.service.MateriaService;
 import jakarta.validation.Valid;
@@ -62,6 +63,22 @@ public class MateriaController {
             log.info("DELETE /materias -> OK ");
         } else {
             log.error("DELETE /materias -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @PutMapping("/{materiaId}")
+    public ResponseEntity<MateriaResponse> updateMateria(
+            @PathVariable Long materiaId,
+            @Valid @RequestBody MateriaUpdateRequest materiaUpdateRequest,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("PUT /materias");
+        String actualToken = authToken.substring(7);
+        MateriaResponse response = materiaService.update(materiaId , materiaUpdateRequest, actualToken);
+        if (response.success()) {
+            log.info("PUT /materias -> OK ");
+        } else {
+            log.error("PUT /materias -> {}", response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
