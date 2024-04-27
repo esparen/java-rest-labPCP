@@ -2,6 +2,7 @@ package br.com.fullstackedu.labpcp.controller;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.AlunoRequest;
 
+import br.com.fullstackedu.labpcp.controller.dto.request.AlunoUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.AlunoResponse;
 
 import br.com.fullstackedu.labpcp.service.AlunoService;
@@ -48,6 +49,22 @@ public class AlunoController {
             log.info("GET /alunos/{} -> OK ", alunoId);
         } else {
             log.error("GET /alunos/{} -> 404", alunoId);
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @PutMapping("/{alunoId}")
+    public ResponseEntity<AlunoResponse> updateAluno(
+            @PathVariable Long alunoId,
+            @Valid @RequestBody AlunoUpdateRequest alunoUpdateRequest,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("PUT /alunos");
+        String actualToken = authToken.substring(7);
+        AlunoResponse response = alunoService.updateAluno(alunoId , alunoUpdateRequest, actualToken);
+        if (response.success()) {
+            log.info("PUT /alunos -> OK ");
+        } else {
+            log.error("PUT /alunos -> 500");
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
