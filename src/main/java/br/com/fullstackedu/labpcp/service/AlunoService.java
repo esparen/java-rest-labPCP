@@ -150,4 +150,30 @@ public class AlunoService {
         }
     }
 
+    public AlunoResponse deleteAluno(Long alunoId, String actualToken) {
+        try {
+            String papelName = loginService.getFieldInToken(actualToken, "scope");
+            List<String> authorizedPapeis = List.of("ADM");
+            if (!authorizedPapeis.contains(papelName)) {
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new AlunoResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            return _deleteAluno(alunoId);
+
+        } catch (Exception e) {
+            log.error("Falha ao excluir a aluno {}. Erro: {}", alunoId, e.getMessage());
+            return new AlunoResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+
+    }
+    private AlunoResponse _deleteAluno(Long alunoId) {
+        AlunoEntity targetAlunoEntity = alunoRepository.findById(alunoId).orElse(null);
+        if (Objects.isNull(targetAlunoEntity))
+            return new AlunoResponse(false, LocalDateTime.now() , "Aluno id [" + alunoId + "] não encontrada" , null, HttpStatus.NOT_FOUND);
+        else {
+            alunoRepository.delete(targetAlunoEntity);
+            return new AlunoResponse(true, LocalDateTime.now() , "Docente id [" + alunoId + "] excluido" , null, HttpStatus.NO_CONTENT);
+        }
+    }
 }
