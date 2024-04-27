@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.database.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -22,6 +23,7 @@ public class CursoEntity {
     private List<TurmaEntity> turmas;
 
     @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<MateriaEntity> materias;
 
 }
