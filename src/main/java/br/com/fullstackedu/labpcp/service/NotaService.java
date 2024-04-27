@@ -93,4 +93,22 @@ public class NotaService {
         log.info("Nota adicionada com sucesso: {}", newNota.getId());
         return new NotaResponse(true, LocalDateTime.now(),"Nota adicionada com sucesso.", Collections.singletonList(insertedNota), HttpStatus.CREATED);
     }
+
+    public NotaResponse getById(Long notaId, String actualToken) {
+        try {
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new NotaResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            NotaEntity targetNota = notaRepository.findById(notaId).orElse(null);
+            if (Objects.isNull(targetNota)){
+                return new NotaResponse(false, LocalDateTime.now() , "Nota ID "+notaId+" não encontrada." , null, HttpStatus.NOT_FOUND);
+            } else
+                return new NotaResponse(true, LocalDateTime.now() , "Nota encontrada" , Collections.singletonList(targetNota), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Nota ID {}. Erro: {}", notaId, e.getMessage());
+            return new NotaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+    }
 }
