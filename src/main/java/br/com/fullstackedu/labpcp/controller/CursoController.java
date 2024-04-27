@@ -64,4 +64,20 @@ public class CursoController {
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
+    @PutMapping("/{cursoId}")
+    public ResponseEntity<CursoResponse> updateCurso(
+            @PathVariable Long cursoId,
+            @Valid @RequestBody CursoRequest cursoUpdateRequest,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("PUT /cursos");
+        String actualToken = authToken.substring(7);
+        CursoResponse response = cursoService.update(cursoId , cursoUpdateRequest, actualToken);
+        if (response.success()) {
+            log.info("PUT /cursos -> OK ");
+        } else {
+            log.error("PUT /cursos -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
 }
