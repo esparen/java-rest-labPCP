@@ -4,6 +4,7 @@ import br.com.fullstackedu.labpcp.controller.dto.request.MateriaRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.MateriaResponse;
 import br.com.fullstackedu.labpcp.service.MateriaService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +47,21 @@ public class MateriaController {
             log.info("GET /materias/{} -> OK ", materiaId);
         } else {
             log.error("GET /materias/{} -> {} ", materiaId, response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @DeleteMapping("/{materiaId}")
+    public ResponseEntity<MateriaResponse> deleteMateria(
+            @PathVariable @NotNull(message = "ID da materia é requerido para exclusão") Long materiaId,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("DELETE /materias");
+        String actualToken = authToken.substring(7);
+        MateriaResponse response = materiaService.deleteMateria(materiaId, actualToken);
+        if (response.success()) {
+            log.info("DELETE /materias -> OK ");
+        } else {
+            log.error("DELETE /materias -> {}", response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
