@@ -85,4 +85,30 @@ public class CursoService {
             return new CursoResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
         }
     }
+
+    public CursoResponse update(Long cursoId, CursoRequest cursoUpdateRequest, String actualToken) {
+        try {
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new CursoResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            return _updateCurso(cursoUpdateRequest,cursoId);
+
+        } catch (Exception e) {
+            log.error("Falha ao atualizar a Curso {}. Erro: {}", cursoId, e.getMessage());
+            return new CursoResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private CursoResponse _updateCurso(CursoRequest cursoUpdateRequest, Long cursoId) {
+        CursoEntity targetCursoEntity = cursoRepository.findById(cursoId).orElse(null);
+        if (Objects.isNull(targetCursoEntity))
+            return new CursoResponse(false, LocalDateTime.now() , "Curso id [" + cursoId + "] não encontrado" , null, HttpStatus.NOT_FOUND);
+
+        targetCursoEntity.setNome(cursoUpdateRequest.nome());
+        CursoEntity savedCursoEntity = cursoRepository.save(targetCursoEntity);
+        return new CursoResponse(true, LocalDateTime.now(), "Curso atualizado", Collections.singletonList(savedCursoEntity) , HttpStatus.OK);
+
+    }
 }
