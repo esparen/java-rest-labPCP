@@ -35,4 +35,19 @@ public class CursoController {
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
+    @GetMapping("/{cursoId}")
+    public ResponseEntity<CursoResponse> getById(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @PathVariable Long cursoId) {
+        log.info("GET /cursos/{} ", cursoId);
+        String actualToken = authToken.substring(7);
+        CursoResponse response = cursoService.getById(cursoId, actualToken);
+        if (response.success()){
+            log.info("GET /cursos/{} -> OK ", cursoId);
+        } else {
+            log.error("GET /cursos/{} -> {} ", cursoId, response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
 }
