@@ -130,4 +130,24 @@ public class AlunoService {
         return new AlunoResponse(true, LocalDateTime.now(), "Aluno atualizado", Collections.singletonList(savedAlunoEntity) , HttpStatus.OK);
     }
 
+    public AlunoResponse getAllAlunos(String actualToken) {
+        try {
+            String papelName = loginService.getFieldInToken(actualToken, "scope");
+            List<String> authorizedPapeis = Arrays.asList("ADM", "PEDAGOGICO");
+            if (!authorizedPapeis.contains(papelName)) {
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new AlunoResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            List<AlunoEntity> listAlunos = alunoRepository.findAll();
+            if (!listAlunos.isEmpty()) {
+                return new AlunoResponse(false, LocalDateTime.now(), "Não há alunos cadastrados.", null, HttpStatus.NOT_FOUND);
+            } else
+                return new AlunoResponse(true, LocalDateTime.now(), "Alunos encontrados: " + listAlunos.size(), listAlunos, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Alunos cadastrados. Erro: {}", e.getMessage());
+            return new AlunoResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }
