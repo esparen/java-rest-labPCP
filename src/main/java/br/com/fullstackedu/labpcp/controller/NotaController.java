@@ -35,4 +35,20 @@ public class NotaController {
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
+    @GetMapping("/{notaId}")
+    public ResponseEntity<NotaResponse> getDocenteById(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @PathVariable Long notaId) {
+        log.info("GET /notas/{} ", notaId);
+        String actualToken = authToken.substring(7);
+        NotaResponse response = notaService.getById(notaId, actualToken);
+        if (response.success()){
+            log.info("GET /notas/{} -> OK ", notaId);
+        } else {
+            log.error("GET /notas/{} -> {} ", notaId, response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+
 }
