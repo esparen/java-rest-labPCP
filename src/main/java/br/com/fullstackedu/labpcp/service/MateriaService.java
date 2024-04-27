@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.service;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.MateriaRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.MateriaUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.MateriaResponse;
 import br.com.fullstackedu.labpcp.database.entity.CursoEntity;
 import br.com.fullstackedu.labpcp.database.entity.MateriaEntity;
@@ -131,5 +132,37 @@ public class MateriaService {
             materiaRepository.delete(targetMateriaEntity);
             return new MateriaResponse(true, LocalDateTime.now() , "Materia id [" + materiaId + "] excluido" , null, HttpStatus.NO_CONTENT);
         }
+    }
+
+    public MateriaResponse update(Long materiaId, MateriaUpdateRequest materiaUpdateRequest, String actualToken) {
+        try {
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new MateriaResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            return _updateMateria(materiaUpdateRequest,materiaId);
+
+        } catch (Exception e) {
+            log.error("Falha ao atualizar a Materia {}. Erro: {}", materiaId, e.getMessage());
+            return new MateriaResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private MateriaResponse _updateMateria(MateriaUpdateRequest materiaUpdateRequest, Long materiaId) {
+        MateriaEntity targetMateriaEntity = materiaRepository.findById(materiaId).orElse(null);
+        if (Objects.isNull(targetMateriaEntity))
+            return new MateriaResponse(false, LocalDateTime.now() , "Materia id [" + materiaId + "] não encontrado" , null, HttpStatus.NOT_FOUND);
+
+        if(Objects.nonNull(materiaUpdateRequest.id_curso())) {
+            CursoEntity targetCursoEntity = cursoRepository.findById(materiaUpdateRequest.id_curso()).orElse(null);
+            if (Objects.isNull(targetCursoEntity))
+                return new MateriaResponse(false, LocalDateTime.now() , "Curso id [" + materiaUpdateRequest.id_curso() + "] não encontrada" , null, HttpStatus.NOT_FOUND);
+            else targetMateriaEntity.setCurso(targetCursoEntity);
+        }
+        if(Objects.nonNull(materiaUpdateRequest.nome())) targetMateriaEntity.setNome(materiaUpdateRequest.nome());
+        MateriaEntity savedMateriaEntity = materiaRepository.save(targetMateriaEntity);
+        return new MateriaResponse(true, LocalDateTime.now(), "Materia atualizada", Collections.singletonList(savedMateriaEntity) , HttpStatus.OK);
+
     }
 }
