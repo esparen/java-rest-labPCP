@@ -35,4 +35,19 @@ public class MateriaController {
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
+    @GetMapping("/{materiaId}")
+    public ResponseEntity<MateriaResponse> getDocenteById(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @PathVariable Long materiaId) {
+        log.info("GET /materias/{} ", materiaId);
+        String actualToken = authToken.substring(7);
+        MateriaResponse response = materiaService.getById(materiaId, actualToken);
+        if (response.success()){
+            log.info("GET /materias/{} -> OK ", materiaId);
+        } else {
+            log.error("GET /materias/{} -> {} ", materiaId, response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
 }
