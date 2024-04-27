@@ -65,4 +65,22 @@ public class MateriaService {
         log.info("Materia adicionada com sucesso: {}", newMateria.getId());
         return new MateriaResponse(true, LocalDateTime.now(),"Materia adicionada com sucesso.", Collections.singletonList(insertedMateria), HttpStatus.CREATED);
     }
+
+    public MateriaResponse getById(Long materiaId, String actualToken) {
+        try {
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new MateriaResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            MateriaEntity targetMateria = materiaRepository.findById(materiaId).orElse(null);
+            if (Objects.isNull(targetMateria)){
+                return new MateriaResponse(false, LocalDateTime.now() , "Materia ID "+materiaId+" não encontrado." , null, HttpStatus.NOT_FOUND);
+            } else
+                return new MateriaResponse(true, LocalDateTime.now() , "Materia encontrada" , Collections.singletonList(targetMateria), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Materia ID {}. Erro: {}", materiaId, e.getMessage());
+            return new MateriaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+    }
 }
