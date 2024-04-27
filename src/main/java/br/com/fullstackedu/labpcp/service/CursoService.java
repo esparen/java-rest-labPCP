@@ -67,4 +67,22 @@ public class CursoService {
             return new CursoResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
         }
     }
+
+    public CursoResponse getAll(String actualToken) {
+        try {
+            if(!_isAuthorized(actualToken)){
+                String errMessage = "Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new CursoResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
+            }
+            List<CursoEntity> listCursos = cursoRepository.findAll();
+            if (listCursos.isEmpty()){
+                return new CursoResponse(false, LocalDateTime.now() , "Não há cursos cadastrados." , null, HttpStatus.NOT_FOUND);
+            } else
+                return new CursoResponse(true, LocalDateTime.now(), "Cursos encontrados: " + listCursos.size() , listCursos, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Cursos cadastrados. Erro: {}", e.getMessage());
+            return new CursoResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+    }
 }
