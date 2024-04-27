@@ -36,4 +36,19 @@ public class AlunoController {
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
+
+    @GetMapping("/{alunoId}")
+    public ResponseEntity<AlunoResponse> getDocenteById(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @PathVariable Long alunoId) {
+        log.info("GET /alunos/{} ", alunoId);
+        String actualToken = authToken.substring(7);
+        AlunoResponse response = alunoService.getById(alunoId, actualToken);
+        if (response.success()){
+            log.info("GET /alunos/{} -> OK ", alunoId);
+        } else {
+            log.error("GET /alunos/{} -> 404", alunoId);
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
 }

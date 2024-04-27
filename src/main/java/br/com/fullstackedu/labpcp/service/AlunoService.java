@@ -68,4 +68,24 @@ public class AlunoService {
         }
 
     }
+
+    public AlunoResponse getById(Long alunoId, String actualToken) {
+        try {
+            String papelName =  loginService.getFieldInToken(actualToken, "scope");
+            List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO");
+            if (!authorizedPapeis.contains(papelName)){
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new AlunoResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            AlunoEntity targetAluno = alunoRepository.findById(alunoId).orElse(null);
+            if (Objects.isNull(targetAluno)){
+                return new AlunoResponse(false, LocalDateTime.now() , "Aluno ID "+alunoId+" não encontrado." , null, HttpStatus.NOT_FOUND);
+            } else
+                return new AlunoResponse(true, LocalDateTime.now() , "Aluno encontrado" , Collections.singletonList(targetAluno), HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Aluno ID {}. Erro: {}", alunoId, e.getMessage());
+            return new AlunoResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+    }
 }
