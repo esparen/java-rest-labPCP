@@ -1,5 +1,6 @@
 package br.com.fullstackedu.labpcp.database.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class MateriaEntity {
     @ManyToOne
     @JoinColumn(name = "id_curso")
     @NotNull(message = "É necessário um Curso válido para cadastrar uma Materia")
+    @JsonBackReference
     private CursoEntity curso;
 
 }
