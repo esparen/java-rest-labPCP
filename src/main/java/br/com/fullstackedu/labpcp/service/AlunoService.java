@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.service;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.AlunoRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.AlunoUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.AlunoResponse;
 import br.com.fullstackedu.labpcp.database.entity.AlunoEntity;
 import br.com.fullstackedu.labpcp.database.entity.TurmaEntity;
@@ -88,4 +89,45 @@ public class AlunoService {
             return new AlunoResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
         }
     }
+
+    public AlunoResponse updateAluno(Long alunoId, AlunoUpdateRequest alunoUpdateRequest, String actualToken) {
+        try {
+            String papelName =  loginService.getFieldInToken(actualToken, "scope");
+            List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO");
+            if (!authorizedPapeis.contains(papelName)){
+                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new AlunoResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            return _updateAluno(alunoUpdateRequest,alunoId);
+
+        } catch (Exception e) {
+            log.error("Falha ao atualizar Aluno ID {}. Erro: {}", alunoId, e.getMessage());
+            return new AlunoResponse(false, LocalDateTime.now(), e.getMessage(), null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private AlunoResponse _updateAluno(AlunoUpdateRequest alunoUpdateRequest, Long alunoId) {
+        AlunoEntity targetAlunoEntity = alunoRepository.findById(alunoId).orElse(null);
+        if (Objects.isNull(targetAlunoEntity))
+            return new AlunoResponse(false, LocalDateTime.now() , "Aluno id [" + alunoId + "] não encontrada" , null, HttpStatus.NOT_FOUND);
+
+        if (alunoUpdateRequest.id_turma() != null) {
+            TurmaEntity targetTurma = turmaRepository.findById(alunoUpdateRequest.id_turma()).orElse(null);
+            if (targetTurma != null) targetAlunoEntity.setTurma(targetTurma);
+            else return new AlunoResponse(false, LocalDateTime.now() , "Falha ao associar Turma ID "+ alunoUpdateRequest.id_turma() +" à Aluno ID ["+ alunoId +"]: A turma não existe." , null, HttpStatus.NOT_FOUND);
+        }
+
+        if (alunoUpdateRequest.id_usuario() != null) {
+            UsuarioEntity targetUsuario = usuarioRepository.findById(alunoUpdateRequest.id_usuario()).orElse(null);
+            if (targetUsuario != null) targetAlunoEntity.setUsuario(targetUsuario);
+            else return new AlunoResponse(false, LocalDateTime.now() , "Falha ao associar Usuario ID "+ alunoUpdateRequest.id_usuario() +" à Aluno ID ["+ alunoId +"]: O usuário não existe." , null, HttpStatus.NOT_FOUND);
+        }
+
+        if (alunoUpdateRequest.nome() != null) targetAlunoEntity.setNome(alunoUpdateRequest.nome());
+        if (alunoUpdateRequest.data_nascimento() != null) targetAlunoEntity.setDataNascimento(alunoUpdateRequest.data_nascimento());
+        AlunoEntity savedAlunoEntity = alunoRepository.save(targetAlunoEntity);
+        return new AlunoResponse(true, LocalDateTime.now(), "Aluno atualizado", Collections.singletonList(savedAlunoEntity) , HttpStatus.OK);
+    }
+
 }
