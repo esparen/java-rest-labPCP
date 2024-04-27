@@ -48,7 +48,7 @@ public class AlunoController {
         if (response.success()){
             log.info("GET /alunos/{} -> OK ", alunoId);
         } else {
-            log.error("GET /alunos/{} -> 404", alunoId);
+            log.error("GET /alunos/{} -> {} ", alunoId, response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
@@ -64,7 +64,21 @@ public class AlunoController {
         if (response.success()) {
             log.info("PUT /alunos -> OK ");
         } else {
-            log.error("PUT /alunos -> 500");
+            log.error("PUT /alunos -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @GetMapping()
+    public ResponseEntity<AlunoResponse> getAllAlunos(
+            @RequestHeader(name = "Authorization") String authToken) throws Exception {
+        log.info("GET /alunos ");
+        String actualToken = authToken.substring(7);
+        AlunoResponse response = alunoService.getAllAlunos(actualToken);
+        if (response.success()){
+            log.info("GET /alunos -> OK ");
+        } else {
+            log.error("GET /alunos -> {}", response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
