@@ -7,6 +7,7 @@ import br.com.fullstackedu.labpcp.controller.dto.response.AlunoResponse;
 
 import br.com.fullstackedu.labpcp.service.AlunoService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -79,6 +80,21 @@ public class AlunoController {
             log.info("GET /alunos -> OK ");
         } else {
             log.error("GET /alunos -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @DeleteMapping("/{alunoId}")
+    public ResponseEntity<AlunoResponse> deleteAluno(
+            @PathVariable @NotNull(message = "ID da aluno é requerido para exclusão") Long alunoId,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("DELETE /alunos");
+        String actualToken = authToken.substring(7);
+        AlunoResponse response = alunoService.deleteAluno(alunoId, actualToken);
+        if (response.success()) {
+            log.info("DELETE /alunos -> OK ");
+        } else {
+            log.error("DELETE /alunos -> {}", response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
