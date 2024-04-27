@@ -4,6 +4,7 @@ import br.com.fullstackedu.labpcp.controller.dto.request.CursoRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.CursoResponse;
 import br.com.fullstackedu.labpcp.service.CursoService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -80,4 +81,18 @@ public class CursoController {
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
+    @DeleteMapping("/{cursoId}")
+    public ResponseEntity<CursoResponse> deleteCurso(
+            @PathVariable @NotNull(message = "ID da curso é requerido para exclusão") Long cursoId,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("DELETE /cursos");
+        String actualToken = authToken.substring(7);
+        CursoResponse response = cursoService.deleteCurso(cursoId, actualToken);
+        if (response.success()) {
+            log.info("DELETE /cursos -> OK ");
+        } else {
+            log.error("DELETE /cursos -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
 }
