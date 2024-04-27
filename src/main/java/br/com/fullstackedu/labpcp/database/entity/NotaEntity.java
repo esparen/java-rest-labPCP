@@ -22,7 +22,7 @@ public class NotaEntity {
     @ManyToOne
     @JoinColumn(name = "id_professor")
     @NotNull(message = "É necessário um Docente(professor) válido para cadastrar uma Nota")
-    private CursoEntity professor;
+    private DocenteEntity professor;
 
     @ManyToOne
     @JoinColumn(name = "id_materia")
