@@ -18,7 +18,8 @@ public class TurmaEntity {
     @Column(nullable = false)
     private String nome;
 
-    @OneToMany(mappedBy = "turma", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "turma", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     List<AlunoEntity> alunos;
 
     @ManyToOne

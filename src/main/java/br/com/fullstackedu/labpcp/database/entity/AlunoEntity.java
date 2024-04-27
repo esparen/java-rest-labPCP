@@ -1,5 +1,6 @@
 package br.com.fullstackedu.labpcp.database.entity;
 
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -28,5 +29,6 @@ public class AlunoEntity {
 
     @ManyToOne
     @JoinColumn(name = "id_turma")
+    @JsonBackReference
     private TurmaEntity turma;
 }

@@ -62,6 +62,7 @@ public class LoginService {
             log.info("Sucesso na autenticação do usuário [{}]", loginRequest.login());
             Instant now = Instant.now();
             String scope = usuarioEntity.getPapel().getNome();
+            Long id_usuario = usuarioEntity.getId();
 
             JwtClaimsSet claims = JwtClaimsSet.builder()
                     .issuer("labpcp_system")
@@ -69,6 +70,7 @@ public class LoginService {
                     .expiresAt(now.plusSeconds(EXPIRATION_TIME))
                     .subject(usuarioEntity.getId().toString())  // token owner
                     .claim("scope", scope)
+                    .claim("id_usuario", id_usuario)
                     .build();
             log.info("claims: [{}]", claims);
 

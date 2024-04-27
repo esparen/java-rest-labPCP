@@ -38,59 +38,53 @@ public class SecurityConfig {
     @Value("${jwt.private.key}")
     RSAPrivateKey priv;
 
-    @Bean // feijão mágico
-    // criação de uma classe
-    // classe que representa os filtros do Spring Security
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/login").permitAll() // permite os endpoints que tenham o texto que condiz com /login
+                        .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/cadastro").permitAll()
-                        .requestMatchers("/error").permitAll() //allows public access to the error page
-                        .anyRequest().authenticated() // pede autenticação para todos os endpoints que não foram permitidos
+                        .requestMatchers("/error").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .csrf(AbstractHttpConfigurer::disable) // desabilita o CSRF, ele bloqueia alguns tipos de chamadas por padrão
+                .csrf(
+                        AbstractHttpConfigurer::disable
+                )
                 .oauth2ResourceServer(oath2 ->
-                        oath2.jwt(Customizer.withDefaults()) // configurar o JWT com os padrões de projeto -> os beans JwtDecoder e JwtEncoder
-                ) // configurar esse programa como um Servidor de Recursos OAuth2
-                // filtro adicionado a cadeia de filtros do Spring Security
-                .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)) // Customize the entry point to return 401 Unauthorized
+                        oath2.jwt(Customizer.withDefaults())
                 )
-                .sessionManagement(session ->  // sessão é uma forma de manter um usuário logado
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                )
+                .sessionManagement(session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                        // indica que o sistema nunca fica logado, ele depende do token para validar um acesso
                 )
         ;
-
-        return http.build(); // Gera um tipo para o SecurityFilterChain, ele preenche a Chain
+        return http.build();
     }
 
-    @Bean // Configuração / Criação de uma Classe de configuração que o Spring Security irá usar
+    @Bean
     JwtDecoder jwtDecoder(){
         return NimbusJwtDecoder
                 .withPublicKey(this.key)
-                .build(); //Crie uma classe decodificador que usa a chave publica
+                .build();
     }
 
-    @Bean // Configuração / Criação de uma Classe de configuração que o Spring Security irá usar
+    @Bean
     JwtEncoder jwtEncoder(){
-
         JWK jwk = new RSAKey.Builder(this.key)
                 .privateKey(this.priv)
-                .build(); // crie um objeto JWK com o campo privateKey
-        // JWK controla chaves de encriptação
+                .build();
 
-        JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>( // lista imutável de JWK
+        JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(
                 new JWKSet(jwk)
         );
 
-        return new NimbusJwtEncoder(jwks); // Criar um encriptador a partir do JWK criado anteriormente
+        return new NimbusJwtEncoder(jwks);
     }
 
-    @Bean // Configuração para as senhas
-    // Vai ser usado para encriptar as senhas antes de salvá-las no banco de dados
+    @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder(){
-        return new BCryptPasswordEncoder(); // codifica, ou criptografar, senhas com o software BCrypt
+        return new BCryptPasswordEncoder();
     }
 }
