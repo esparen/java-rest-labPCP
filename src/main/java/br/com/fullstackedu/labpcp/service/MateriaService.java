@@ -83,4 +83,27 @@ public class MateriaService {
             return new MateriaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
         }
     }
+
+    public MateriaResponse getByCursoId(Long cursoId, String actualToken) {
+        try {
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new MateriaResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+
+            CursoEntity targetCursoEntity = cursoRepository.findById(cursoId).orElse(null);
+            if (Objects.isNull(targetCursoEntity))
+                return new MateriaResponse(false, LocalDateTime.now() , "Curso id [" + cursoId + "] não encontrada" , null, HttpStatus.NOT_FOUND);
+
+            List<MateriaEntity> listMaterias =  materiaRepository.findByCursoId(cursoId);
+            if (listMaterias.isEmpty()){
+                return new MateriaResponse(false, LocalDateTime.now() , "Nenhuma materia encontrada para o Curso ID "+cursoId , null, HttpStatus.NOT_FOUND);
+            } else
+                return new MateriaResponse(true, LocalDateTime.now() , "Materias encontradas: "+ listMaterias.size() , listMaterias, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Materias para o Curso ID {}. Erro: {}", cursoId, e.getMessage());
+            return new MateriaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+    }
 }

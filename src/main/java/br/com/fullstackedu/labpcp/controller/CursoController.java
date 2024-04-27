@@ -2,7 +2,9 @@ package br.com.fullstackedu.labpcp.controller;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.CursoRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.CursoResponse;
+import br.com.fullstackedu.labpcp.controller.dto.response.MateriaResponse;
 import br.com.fullstackedu.labpcp.service.CursoService;
+import br.com.fullstackedu.labpcp.service.MateriaService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/cursos")
 public class CursoController {
     private final CursoService cursoService;
+    private final MateriaService materiaService;
 
     @PostMapping()
     public ResponseEntity<CursoResponse> insertCurso(
@@ -61,6 +64,21 @@ public class CursoController {
             log.info("GET /cursos -> OK ");
         } else {
             log.error("GET /cursos -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @GetMapping("/{cursoId}/materias")
+    public ResponseEntity<MateriaResponse> getMateriasByCursoId(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @PathVariable Long cursoId) {
+        log.info("GET /cursos/{}/materias ", cursoId);
+        String actualToken = authToken.substring(7);
+        MateriaResponse response = materiaService.getByCursoId(cursoId, actualToken);
+        if (response.success()){
+            log.info("GET /cursos/{}/materias -> OK ", cursoId);
+        } else {
+            log.error("GET /cursos/{}/materias -> {} ", cursoId, response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
