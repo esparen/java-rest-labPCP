@@ -50,4 +50,18 @@ public class CursoController {
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
 
+    @GetMapping()
+    public ResponseEntity<CursoResponse> getAll(
+            @RequestHeader(name = "Authorization") String authToken) throws Exception {
+        log.info("GET /cursos ");
+        String actualToken = authToken.substring(7);
+        CursoResponse response = cursoService.getAll(actualToken);
+        if (response.success()){
+            log.info("GET /cursos -> OK ");
+        } else {
+            log.error("GET /cursos -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
 }
