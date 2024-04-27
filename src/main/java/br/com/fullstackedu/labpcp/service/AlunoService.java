@@ -29,12 +29,21 @@ public class AlunoService {
     private final UsuarioRepository usuarioRepository;
     private final TurmaRepository turmaRepository;
 
+    private static final List<String> commonPermissions = List.of("ADM", "PEDAGOGICO");
+    private static final List<String> deletePermission = List.of("ADM");
+
+    private boolean _isAuthorized(String actualToken, List<String> authorizedPerfis) {
+        String papelName =  loginService.getFieldInToken(actualToken, "scope");
+        return authorizedPerfis.contains(papelName);
+    }
+    private boolean _isAuthorized(String actualToken) {
+        return _isAuthorized(actualToken, commonPermissions);
+    }
+
     public AlunoResponse insertAluno(AlunoRequest alunoRequest, String actualToken) {
         try {
-            String papelName = loginService.getFieldInToken(actualToken, "scope");
-            List<String> authorizedPapeis = Arrays.asList("ADM", "PEDAGOGICO");
-            if (!authorizedPapeis.contains(papelName)) {
-                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
                 log.error(errMessage);
                 return new AlunoResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
             }
@@ -72,10 +81,8 @@ public class AlunoService {
 
     public AlunoResponse getById(Long alunoId, String actualToken) {
         try {
-            String papelName =  loginService.getFieldInToken(actualToken, "scope");
-            List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO");
-            if (!authorizedPapeis.contains(papelName)){
-                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
                 log.error(errMessage);
                 return new AlunoResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
             }
@@ -92,10 +99,8 @@ public class AlunoService {
 
     public AlunoResponse updateAluno(Long alunoId, AlunoUpdateRequest alunoUpdateRequest, String actualToken) {
         try {
-            String papelName =  loginService.getFieldInToken(actualToken, "scope");
-            List<String> authorizedPapeis =  Arrays.asList("ADM", "PEDAGOGICO");
-            if (!authorizedPapeis.contains(papelName)){
-                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
                 log.error(errMessage);
                 return new AlunoResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
             }
@@ -132,15 +137,13 @@ public class AlunoService {
 
     public AlunoResponse getAllAlunos(String actualToken) {
         try {
-            String papelName = loginService.getFieldInToken(actualToken, "scope");
-            List<String> authorizedPapeis = Arrays.asList("ADM", "PEDAGOGICO");
-            if (!authorizedPapeis.contains(papelName)) {
-                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
                 log.error(errMessage);
                 return new AlunoResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
             }
             List<AlunoEntity> listAlunos = alunoRepository.findAll();
-            if (!listAlunos.isEmpty()) {
+            if (listAlunos.isEmpty()) {
                 return new AlunoResponse(false, LocalDateTime.now(), "Não há alunos cadastrados.", null, HttpStatus.NOT_FOUND);
             } else
                 return new AlunoResponse(true, LocalDateTime.now(), "Alunos encontrados: " + listAlunos.size(), listAlunos, HttpStatus.OK);
@@ -152,10 +155,8 @@ public class AlunoService {
 
     public AlunoResponse deleteAluno(Long alunoId, String actualToken) {
         try {
-            String papelName = loginService.getFieldInToken(actualToken, "scope");
-            List<String> authorizedPapeis = List.of("ADM");
-            if (!authorizedPapeis.contains(papelName)) {
-                String errMessage = "Usuários com papel [" + papelName + "] não tem acesso a essa funcionalidade";
+            if (!_isAuthorized(actualToken, deletePermission)){
+                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
                 log.error(errMessage);
                 return new AlunoResponse(false, LocalDateTime.now(), errMessage, null, HttpStatus.UNAUTHORIZED);
             }
