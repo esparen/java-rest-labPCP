@@ -111,4 +111,22 @@ public class NotaService {
             return new NotaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
         }
     }
+
+    public NotaResponse getByAlunoId(Long alunoId, String actualToken) {
+        try {
+            if (!_isAuthorized(actualToken)){
+                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
+                log.error(errMessage);
+                return new NotaResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            }
+            List<NotaEntity> listNotasByAluno = notaRepository.findByAlunoId(alunoId);
+            if (listNotasByAluno.isEmpty()){
+                return new NotaResponse(false, LocalDateTime.now() , "Nenhuma Nota encontrada para o Aluno ID "+alunoId , null, HttpStatus.NOT_FOUND);
+            } else
+                return new NotaResponse(true, LocalDateTime.now() , "Notas encontradas: " + listNotasByAluno.size() , listNotasByAluno, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("Falha ao buscar Notas do Aluno ID {}. Erro: {}", alunoId, e.getMessage());
+            return new NotaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+        }
+    }
 }
