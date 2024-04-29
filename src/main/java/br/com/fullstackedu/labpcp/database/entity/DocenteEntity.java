@@ -1,5 +1,6 @@
 package br.com.fullstackedu.labpcp.database.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class DocenteEntity {
         @ManyToOne
         @JoinColumn(name = "id_usuario")
         @NotNull(message = "É necessário um Usuário Valido para cadastrar um Docente")
+        @JsonBackReference
         private UsuarioEntity usuario;
 
         public DocenteEntity(String nome, LocalDate dataEntrada, UsuarioEntity usuario) {
