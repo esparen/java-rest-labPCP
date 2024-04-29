@@ -2,6 +2,8 @@ package br.com.fullstackedu.labpcp.service;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.NotaRequest;
 import br.com.fullstackedu.labpcp.controller.dto.request.NotaUpdateRequest;
+import br.com.fullstackedu.labpcp.controller.dto.response.AlunoScoreDTO;
+import br.com.fullstackedu.labpcp.controller.dto.response.AlunoScoreResponse;
 import br.com.fullstackedu.labpcp.controller.dto.response.NotaResponse;
 import br.com.fullstackedu.labpcp.database.entity.AlunoEntity;
 import br.com.fullstackedu.labpcp.database.entity.DocenteEntity;
@@ -20,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -33,7 +36,7 @@ public class NotaService {
 
     private static final List<String> commonPermissions = List.of("ADM", "PROFESSOR");
     private static final List<String> ownerPermissions = List.of("ALUNO");
-    private static final List<String> deletePermission = List.of("ADM");
+    private static final List<String> admPermission = List.of("ADM");
 
     private boolean _isAuthorized(String actualToken, List<String> authorizedPerfis) {
         String papelName =  loginService.getFieldInToken(actualToken, "scope");
@@ -267,7 +270,7 @@ public class NotaService {
     }
     public NotaResponse deleteNota(Long notaId, String actualToken) {
         try {
-            if(_isAuthorized(actualToken, deletePermission)) {
+            if(_isAuthorized(actualToken, admPermission)) {
                 return _deleteNota(notaId);
             }
             String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
@@ -299,5 +302,59 @@ public class NotaService {
                     "Nota id [" + notaId + "] excluido"
             );
         }
+    }
+
+    public AlunoScoreResponse getScoreByAlunoId(Long alunoId, String actualToken) {
+        try {
+            if (_isAuthorized(actualToken, admPermission)) {
+                return _getScoreByAlunoId(alunoId);
+            }
+
+            if (_isAuthorized(actualToken, ownerPermissions)){
+                Long usuarioId = Long.valueOf(loginService.getFieldInToken(actualToken, "id_usuario"));
+                AlunoEntity loggedAluno =  alunoRepository.findByUsuarioId(usuarioId).orElse(null);
+                if (loggedAluno != null && Objects.equals(loggedAluno.getId(), alunoId)) {
+                    return _getScoreByAlunoId(alunoId);
+                } else return AlunoScoreResponse.createErrorResponse(
+                        HttpStatus.UNAUTHORIZED,
+                        "Alunos logados tem acesso someone a suas próprias notas e pontuções.");
+            }
+            return AlunoScoreResponse.createErrorResponse(
+                    HttpStatus.UNAUTHORIZED,
+                    "O Usuário logado não tem acesso a essa funcionalidade");
+
+        } catch (Exception e) {
+            log.error("Falha ao buscar Notas do Aluno ID {}. Erro: {}", alunoId, e.getMessage());
+            return AlunoScoreResponse.createErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage()
+            );
+        }
+    }
+
+    private AlunoScoreResponse _getScoreByAlunoId(Long alunoId) {
+        AlunoEntity targetAlunoEntity = alunoRepository.findById(alunoId).orElseThrow(() -> new RuntimeException("Erro ao buscar aluno ID ["+alunoId+"]"));
+        NotaResponse listOfNotas = _getByAlunoId(alunoId);
+        if(!listOfNotas.success()){
+            return AlunoScoreResponse.createErrorResponse(
+                    listOfNotas.httpStatus(),
+                    listOfNotas.message()
+            );
+        }
+        double averageGradesAluno = listOfNotas.notaData()
+                .stream()
+                .map(NotaEntity::getValor)
+                .collect(
+                        Collectors.averagingDouble(Double::doubleValue)
+                );
+        double scoreAluno = (averageGradesAluno * 10);
+        double roundedScoreAluno = Math.round(scoreAluno * 100.00)/100.00;
+
+        AlunoScoreDTO alunoScoreDTO = new AlunoScoreDTO(targetAlunoEntity, roundedScoreAluno);
+        return AlunoScoreResponse.createSuccessResponse(
+                HttpStatus.OK,
+                "Pontuação calculada com sucesso",
+                Collections.singletonList(alunoScoreDTO)
+        );
     }
 }

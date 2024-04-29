@@ -5,6 +5,7 @@ import br.com.fullstackedu.labpcp.controller.dto.request.AlunoRequest;
 import br.com.fullstackedu.labpcp.controller.dto.request.AlunoUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.AlunoResponse;
 
+import br.com.fullstackedu.labpcp.controller.dto.response.AlunoScoreResponse;
 import br.com.fullstackedu.labpcp.controller.dto.response.NotaResponse;
 import br.com.fullstackedu.labpcp.service.AlunoService;
 import br.com.fullstackedu.labpcp.service.NotaService;
@@ -113,6 +114,22 @@ public class AlunoController {
             log.info("DELETE /alunos -> OK ");
         } else {
             log.error("DELETE /alunos -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @GetMapping("/{alunoId}/pontuacao")
+    public ResponseEntity<AlunoScoreResponse> getScoreByAlunoId(
+            @PathVariable Long alunoId,
+            @RequestHeader(name = "Authorization") String authToken) {
+
+        log.info("GET /alunos/{}/pontuacao", alunoId);
+        String actualToken = authToken.substring(7);
+        AlunoScoreResponse response = notaService.getScoreByAlunoId(alunoId, actualToken);
+        if (response.success()) {
+            log.info("GET /alunos/{}/pontuacao -> OK", alunoId);
+        } else {
+            log.error("GET /alunos/{}/pontuacao -> {}", alunoId, response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
