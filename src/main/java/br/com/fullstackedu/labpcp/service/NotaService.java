@@ -222,14 +222,14 @@ public class NotaService {
     private NotaResponse _updateNota(NotaUpdateRequest notaUpdateRequest, Long notaId) {
         NotaEntity targetNotaEntity = notaRepository.findById(notaId).orElse(null);
         if (Objects.isNull(targetNotaEntity))
-            return NotaResponse.createErrorResponse (
+            return NotaResponse.createErrorResponse(
                     HttpStatus.NOT_FOUND,
                     "Nota id [" + notaId + "] não encontrado"
             );
         if (Objects.nonNull(notaUpdateRequest.id_aluno())) {
             AlunoEntity targetAluno = alunoRepository.findById(notaUpdateRequest.id_aluno()).orElse(null);
             if (Objects.isNull(targetAluno))
-                return NotaResponse.createErrorResponse (
+                return NotaResponse.createErrorResponse(
                         HttpStatus.NOT_FOUND,
                         "Aluno id [" + notaUpdateRequest.id_aluno() + "] não encontrado"
                 );
@@ -238,7 +238,7 @@ public class NotaService {
         if (Objects.nonNull(notaUpdateRequest.id_materia())) {
             MateriaEntity targetMateriaEntity = materiaRepository.findById(notaUpdateRequest.id_materia()).orElse(null);
             if (Objects.isNull(targetMateriaEntity))
-                return NotaResponse.createErrorResponse (
+                return NotaResponse.createErrorResponse(
                         HttpStatus.NOT_FOUND,
                         "Materia id [" + notaUpdateRequest.id_materia() + "] não encontrado"
                 );
@@ -248,21 +248,56 @@ public class NotaService {
         if (Objects.nonNull(notaUpdateRequest.id_professor())) {
             DocenteEntity targetDocente = docenteRepository.findById(notaUpdateRequest.id_professor()).orElse(null);
             if (Objects.isNull(targetDocente))
-                return NotaResponse.createErrorResponse (
+                return NotaResponse.createErrorResponse(
                         HttpStatus.NOT_FOUND,
                         "Docente id [" + notaUpdateRequest.id_professor() + "] não encontrado"
                 );
             targetNotaEntity.setProfessor(targetDocente);
         }
-        if (Objects.nonNull(notaUpdateRequest.valor())) targetNotaEntity.setValor(notaUpdateRequest.valor()); ;
+        if (Objects.nonNull(notaUpdateRequest.valor())) targetNotaEntity.setValor(notaUpdateRequest.valor());
         if (Objects.nonNull(notaUpdateRequest.data())) targetNotaEntity.setData(notaUpdateRequest.data());
 
         NotaEntity savedNotaEntity = notaRepository.save(targetNotaEntity);
-        return NotaResponse.createSuccessResponse (
+        return NotaResponse.createSuccessResponse(
                 HttpStatus.OK,
                 "Nota atualizada",
                 Collections.singletonList(savedNotaEntity)
         );
 
+    }
+    public NotaResponse deleteNota(Long notaId, String actualToken) {
+        try {
+            if(_isAuthorized(actualToken, deletePermission)) {
+                return _deleteNota(notaId);
+            }
+            String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
+            log.error(errMessage);
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.UNAUTHORIZED,
+                    errMessage
+            );
+        } catch (Exception e) {
+            log.error("Falha ao excluir a nota {}. Erro: {}", notaId, e.getMessage());
+            return NotaResponse.createErrorResponse (
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage()
+            );
+        }
+    }
+
+    private NotaResponse _deleteNota(Long notaId) {
+        NotaEntity targetNotaEntity = notaRepository.findById(notaId).orElse(null);
+        if (Objects.isNull(targetNotaEntity))
+            return NotaResponse.createErrorResponse (
+                    HttpStatus.NOT_FOUND,
+                    "Nota id [" + notaId + "] não encontrada"
+            );
+        else {
+            notaRepository.delete(targetNotaEntity);
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.NO_CONTENT,
+                    "Nota id [" + notaId + "] excluido"
+            );
+        }
     }
 }
