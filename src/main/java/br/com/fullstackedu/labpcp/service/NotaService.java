@@ -31,6 +31,7 @@ public class NotaService {
     private final LoginService loginService;
 
     private static final List<String> commonPermissions = List.of("ADM", "PROFESSOR");
+    private static final List<String> ownerPermissions = List.of("ALUNO");
     private static final List<String> deletePermission = List.of("ADM");
 
     private boolean _isAuthorized(String actualToken, List<String> authorizedPerfis) {
@@ -96,37 +97,105 @@ public class NotaService {
 
     public NotaResponse getById(Long notaId, String actualToken) {
         try {
-            if (!_isAuthorized(actualToken)){
-                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
-                log.error(errMessage);
-                return new NotaResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            if (_isAuthorized(actualToken, commonPermissions)) {
+                return _getNotaById(notaId);
             }
-            NotaEntity targetNota = notaRepository.findById(notaId).orElse(null);
-            if (Objects.isNull(targetNota)){
-                return new NotaResponse(false, LocalDateTime.now() , "Nota ID "+notaId+" não encontrada." , null, HttpStatus.NOT_FOUND);
-            } else
-                return new NotaResponse(true, LocalDateTime.now() , "Nota encontrada" , Collections.singletonList(targetNota), HttpStatus.OK);
+
+            if (_isAuthorized(actualToken, ownerPermissions)) {
+                Long usuarioId = Long.valueOf(loginService.getFieldInToken(actualToken, "id_usuario"));
+                return _getNotaByIdAndAlunoId(notaId, usuarioId);
+            }
+
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.UNAUTHORIZED,
+                    "O Usuário logado não tem acesso a essa funcionalidade");
+
         } catch (Exception e) {
             log.error("Falha ao buscar Nota ID {}. Erro: {}", notaId, e.getMessage());
-            return new NotaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage()
+            );
         }
+    }
+
+    private NotaResponse _getNotaById(Long notaId) {
+        NotaEntity targetNota = notaRepository.findById(notaId).orElse(null);
+        if (targetNota == null) {
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.NOT_FOUND,
+                    "Nota ID " + notaId + " não encontrada."
+            );
+        }
+        return NotaResponse.createSuccessResponse(
+                HttpStatus.OK,
+                "Nota encontrada",
+                Collections.singletonList(targetNota)
+        );
+    }
+
+    private NotaResponse _getNotaByIdAndAlunoId(Long notaId, Long usuarioId) {
+        AlunoEntity targetAluno = alunoRepository.findByUsuarioId(usuarioId).orElse(null);
+        if (targetAluno == null) {
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.NOT_FOUND,
+                    "Nenhum Aluno foi encontrado para o usuário logado com id [" + usuarioId + "]"
+            );
+        }
+
+        NotaEntity targetNota = notaRepository.findByIdAndAlunoId(notaId, targetAluno.getId()).orElse(null);
+        if (targetNota == null) {
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.NOT_FOUND,
+                    "Nota ID " + notaId + " não encontrada para este aluno."
+            );
+        }
+
+        return NotaResponse.createSuccessResponse(
+                HttpStatus.OK,
+                "Nota encontrada",
+                Collections.singletonList(targetNota)
+        );
     }
 
     public NotaResponse getByAlunoId(Long alunoId, String actualToken) {
         try {
-            if (!_isAuthorized(actualToken)){
-                String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
-                log.error(errMessage);
-                return new NotaResponse(false, LocalDateTime.now() , errMessage , null, HttpStatus.UNAUTHORIZED);
+            if (_isAuthorized(actualToken, commonPermissions)) {
+                return _getByAlunoId(alunoId);
             }
-            List<NotaEntity> listNotasByAluno = notaRepository.findByAlunoId(alunoId);
-            if (listNotasByAluno.isEmpty()){
-                return new NotaResponse(false, LocalDateTime.now() , "Nenhuma Nota encontrada para o Aluno ID "+alunoId , null, HttpStatus.NOT_FOUND);
-            } else
-                return new NotaResponse(true, LocalDateTime.now() , "Notas encontradas: " + listNotasByAluno.size() , listNotasByAluno, HttpStatus.OK);
+
+            if (_isAuthorized(actualToken, ownerPermissions)){
+                Long usuarioId = Long.valueOf(loginService.getFieldInToken(actualToken, "id_usuario"));
+                AlunoEntity loggedAluno =  alunoRepository.findByUsuarioId(usuarioId).orElse(null);
+                if (loggedAluno != null && Objects.equals(loggedAluno.getId(), alunoId)) {
+                    return _getByAlunoId(alunoId);
+                } else return NotaResponse.createErrorResponse(
+                        HttpStatus.UNAUTHORIZED,
+                        "Alunos logados tem acesso someone a suas próprias notas.");
+            }
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.UNAUTHORIZED,
+                    "O Usuário logado não tem acesso a essa funcionalidade");
+
         } catch (Exception e) {
             log.error("Falha ao buscar Notas do Aluno ID {}. Erro: {}", alunoId, e.getMessage());
-            return new NotaResponse(false, LocalDateTime.now() , e.getMessage() , null, HttpStatus.BAD_REQUEST );
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage()
+            );
         }
+    }
+
+    private NotaResponse _getByAlunoId(Long alunoId) {
+        List<NotaEntity> listNotasByAluno = notaRepository.findByAlunoId(alunoId);
+        if (listNotasByAluno.isEmpty()){
+            return NotaResponse.createErrorResponse (
+                    HttpStatus.NOT_FOUND,
+                    "Nenhuma Nota encontrada para o Aluno ID "+alunoId);
+        } else
+            return NotaResponse.createSuccessResponse (
+                    HttpStatus.OK,
+                    "Notas encontradas: " + listNotasByAluno.size(),
+                    listNotasByAluno);
     }
 }
