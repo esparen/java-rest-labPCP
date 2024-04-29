@@ -5,7 +5,9 @@ import br.com.fullstackedu.labpcp.controller.dto.request.AlunoRequest;
 import br.com.fullstackedu.labpcp.controller.dto.request.AlunoUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.AlunoResponse;
 
+import br.com.fullstackedu.labpcp.controller.dto.response.NotaResponse;
 import br.com.fullstackedu.labpcp.service.AlunoService;
+import br.com.fullstackedu.labpcp.service.NotaService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AlunoController {
     private final AlunoService alunoService;
+    private final NotaService notaService;
 
     @PostMapping()
     public ResponseEntity<AlunoResponse> insertAluno(
@@ -40,7 +43,7 @@ public class AlunoController {
     }
 
     @GetMapping("/{alunoId}")
-    public ResponseEntity<AlunoResponse> getDocenteById(
+    public ResponseEntity<AlunoResponse> getById(
             @RequestHeader(name = "Authorization") String authToken,
             @Valid @PathVariable Long alunoId) {
         log.info("GET /alunos/{} ", alunoId);
@@ -80,6 +83,21 @@ public class AlunoController {
             log.info("GET /alunos -> OK ");
         } else {
             log.error("GET /alunos -> {}", response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+
+    @GetMapping("/{alunoId}/notas")
+    public ResponseEntity<NotaResponse> getNotasByAlunoId(
+            @RequestHeader(name = "Authorization") String authToken,
+            @Valid @PathVariable Long alunoId) {
+        log.info("GET /alunos/{}/notas ", alunoId);
+        String actualToken = authToken.substring(7);
+        NotaResponse response = notaService.getByAlunoId(alunoId, actualToken);
+        if (response.success()){
+            log.info("GET /alunos/{}/notas -> OK ", alunoId);
+        } else {
+            log.error("GET /alunos/{}/notas -> {} ", alunoId, response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }

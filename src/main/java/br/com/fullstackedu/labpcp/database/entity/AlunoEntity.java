@@ -25,6 +25,7 @@ public class AlunoEntity {
     @ManyToOne
     @JoinColumn(name = "id_usuario")
     @NotNull(message = "É necessário um Usuário Valido para cadastrar um Aluno")
+    @JsonBackReference
     private UsuarioEntity usuario;
 
     @ManyToOne
