@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.controller;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.NotaRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.NotaUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.NotaResponse;
 import br.com.fullstackedu.labpcp.service.NotaService;
 import jakarta.validation.Valid;
@@ -46,6 +47,21 @@ public class NotaController {
             log.info("GET /notas/{} -> OK ", notaId);
         } else {
             log.error("GET /notas/{} -> {} ", notaId, response.httpStatus());
+        }
+        return ResponseEntity.status(response.httpStatus()).body(response);
+    }
+    @PutMapping("/{notaId}")
+    public ResponseEntity<NotaResponse> updateNota(
+            @PathVariable Long notaId,
+            @Valid @RequestBody NotaUpdateRequest notaUpdateRequest,
+            @RequestHeader(name = "Authorization") String authToken) {
+        log.info("PUT /notas");
+        String actualToken = authToken.substring(7);
+        NotaResponse response = notaService.updateNota(notaId , notaUpdateRequest, actualToken);
+        if (response.success()) {
+            log.info("PUT /notas -> OK ");
+        } else {
+            log.error("PUT /notas -> {}", response.httpStatus());
         }
         return ResponseEntity.status(response.httpStatus()).body(response);
     }
