@@ -1,6 +1,7 @@
 package br.com.fullstackedu.labpcp.service;
 
 import br.com.fullstackedu.labpcp.controller.dto.request.NotaRequest;
+import br.com.fullstackedu.labpcp.controller.dto.request.NotaUpdateRequest;
 import br.com.fullstackedu.labpcp.controller.dto.response.NotaResponse;
 import br.com.fullstackedu.labpcp.database.entity.AlunoEntity;
 import br.com.fullstackedu.labpcp.database.entity.DocenteEntity;
@@ -197,5 +198,71 @@ public class NotaService {
                     HttpStatus.OK,
                     "Notas encontradas: " + listNotasByAluno.size(),
                     listNotasByAluno);
+    }
+
+    public NotaResponse updateNota(Long notaId, NotaUpdateRequest notaUpdateRequest, String actualToken) {
+        try {
+            if (_isAuthorized(actualToken, commonPermissions)) {
+                return _updateNota(notaUpdateRequest,notaId);
+            }
+            String errMessage = "O Usuário logado não tem acesso a essa funcionalidade";
+            log.error(errMessage);
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.UNAUTHORIZED,
+                    errMessage);
+        } catch (Exception e) {
+            log.error("Falha ao atualizar a Nota {}. Erro: {}", notaId, e.getMessage());
+            return NotaResponse.createErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    e.getMessage()
+            );
+        }
+    }
+
+    private NotaResponse _updateNota(NotaUpdateRequest notaUpdateRequest, Long notaId) {
+        NotaEntity targetNotaEntity = notaRepository.findById(notaId).orElse(null);
+        if (Objects.isNull(targetNotaEntity))
+            return NotaResponse.createErrorResponse (
+                    HttpStatus.NOT_FOUND,
+                    "Nota id [" + notaId + "] não encontrado"
+            );
+        if (Objects.nonNull(notaUpdateRequest.id_aluno())) {
+            AlunoEntity targetAluno = alunoRepository.findById(notaUpdateRequest.id_aluno()).orElse(null);
+            if (Objects.isNull(targetAluno))
+                return NotaResponse.createErrorResponse (
+                        HttpStatus.NOT_FOUND,
+                        "Aluno id [" + notaUpdateRequest.id_aluno() + "] não encontrado"
+                );
+            targetNotaEntity.setAluno(targetAluno);
+        }
+        if (Objects.nonNull(notaUpdateRequest.id_materia())) {
+            MateriaEntity targetMateriaEntity = materiaRepository.findById(notaUpdateRequest.id_materia()).orElse(null);
+            if (Objects.isNull(targetMateriaEntity))
+                return NotaResponse.createErrorResponse (
+                        HttpStatus.NOT_FOUND,
+                        "Materia id [" + notaUpdateRequest.id_materia() + "] não encontrado"
+                );
+            targetNotaEntity.setMateria(targetMateriaEntity);
+        }
+
+        if (Objects.nonNull(notaUpdateRequest.id_professor())) {
+            DocenteEntity targetDocente = docenteRepository.findById(notaUpdateRequest.id_professor()).orElse(null);
+            if (Objects.isNull(targetDocente))
+                return NotaResponse.createErrorResponse (
+                        HttpStatus.NOT_FOUND,
+                        "Docente id [" + notaUpdateRequest.id_professor() + "] não encontrado"
+                );
+            targetNotaEntity.setProfessor(targetDocente);
+        }
+        if (Objects.nonNull(notaUpdateRequest.valor())) targetNotaEntity.setValor(notaUpdateRequest.valor()); ;
+        if (Objects.nonNull(notaUpdateRequest.data())) targetNotaEntity.setData(notaUpdateRequest.data());
+
+        NotaEntity savedNotaEntity = notaRepository.save(targetNotaEntity);
+        return NotaResponse.createSuccessResponse (
+                HttpStatus.OK,
+                "Nota atualizada",
+                Collections.singletonList(savedNotaEntity)
+        );
+
     }
 }
